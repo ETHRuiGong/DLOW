@@ -43,7 +43,7 @@ if __name__ == '__main__':
             alpha = math.exp((total_steps-1.0/2.0*(opt.progressive_epoch-1)*dataset_size)/(1.0/4.0*(opt.progressive_epoch-1)*dataset_size))
             total_steps += opt.batchSize
             epoch_iter += opt.batchSize
-            model.set_input(data, beta, alpha, sign)
+            model.set_input(data, sign)
             model.optimize_parameters()
 
             if total_steps % opt.display_freq == 0:

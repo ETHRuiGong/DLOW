@@ -17,7 +17,7 @@ class CycleGANModel(BaseModel):
         self.label_intensity = opt.label_intensity
         # self.label_intensity_styletransfer = opt.label_intensity_styletransfer
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
-        self.loss_names = ['cycle_A', 'cycle_B', 'G_A_Classification0', 'G_B_Classification0','D_A_Classification0', 'D_B_Classification0', 'G_A_Classification1', 'G_B_Classification1', 'D_A_Classification1', 'D_B_Classification1', 'G_A_Classification2', 'G_B_Classification2', 'D_A_Classification2', 'D_B_Classification2', 'G_A_Classification3', 'G_B_Classification3', 'D_A_Classification3', 'D_B_Classification3', 'D_Regression']
+        self.loss_names = ['cycle_A', 'cycle_B', 'G_A_Classification0', 'G_B_Classification0','D_A_Classification0', 'D_B_Classification0', 'G_A_Classification1', 'G_B_Classification1', 'D_A_Classification1', 'D_B_Classification1', 'G_A_Classification2', 'G_B_Classification2', 'D_A_Classification2', 'D_B_Classification2', 'G_A_Classification3', 'G_B_Classification3', 'D_A_Classification3', 'D_B_Classification3']
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
         visual_names_A = ['real_A', 'fake_B', 'rec_A']
 #        visual_names_B = ['real_B', 'fake_A', 'rec_B']
@@ -29,7 +29,7 @@ class CycleGANModel(BaseModel):
         self.visual_names = visual_names_A + visual_names_B
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks
         if self.isTrain:
-            self.model_names = ['G_A', 'G_B', 'D_A_Classification0', 'D_B_Classification0', 'D_A_Classification1', 'D_B_Classification1', 'D_A_Classification2', 'D_B_Classification2', 'D_A_Classification3', 'D_B_Classification3', 'DeConv','D_Regression']
+            self.model_names = ['G_A', 'G_B', 'D_A_Classification0', 'D_B_Classification0', 'D_A_Classification1', 'D_B_Classification1', 'D_A_Classification2', 'D_B_Classification2', 'D_A_Classification3', 'D_B_Classification3', 'DeConv']
         else:  # during test time, only load Gs
             self.model_names = ['G_A', 'G_B', 'DeConv']
             self.label_intensity_styletransfer = opt.label_intensity_styletransfer
@@ -80,9 +80,7 @@ class CycleGANModel(BaseModel):
                                               ndf=opt.ndf, which_model_netD=opt.which_model_netD,
                                               norm=opt.norm, use_sigmoid=opt.use_sigmoid, gpu_ids=opt.gpu_ids)
 
-            self.netD_Regression = networks.define_D_Regression4(input_nc=opt.input_nc,
-                                              ndf=opt.ndf, which_model_netD=opt.which_model_netD,
-                                              norm=opt.norm, use_sigmoid=opt.use_sigmoid, gpu_ids=opt.gpu_ids)
+
 
         if self.isTrain:
             self.fake_A_pool = ImagePool(opt.pool_size)
@@ -105,7 +103,7 @@ class CycleGANModel(BaseModel):
             self.optimizer_D_Classification3 = torch.optim.Adam(itertools.chain(self.netD_A_Classification3.parameters(), self.netD_B_Classification3.parameters()),
                                                 lr=opt.lr, betas=(opt.beta1, 0.999))
 
-            self.optimizer_D_Regression = torch.optim.Adam(self.netD_Regression.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+
 
             self.optimizers = []
             self.schedulers = []
@@ -116,7 +114,7 @@ class CycleGANModel(BaseModel):
             self.optimizers.append(self.optimizer_D_Classification2)
             self.optimizers.append(self.optimizer_D_Classification3)
 
-            self.optimizers.append(self.optimizer_D_Regression)
+
             for optimizer in self.optimizers:
                 self.schedulers.append(networks.get_scheduler(optimizer, opt))
 
@@ -301,7 +299,7 @@ class CycleGANModel(BaseModel):
 
         # GAN loss D_A(G_A(A))
         self.fake_B = self.netG_A.forward(self.real_A, self.add_item)
-        self.loss_D_Regression = self.criterionRegression(self.netD_Regression.forward(self.fake_B), self.random_number.reshape(1,4).tolist())*lambda_GA
+
         if self.sign == '0':
             # print("Asign == 0:", self.random_number)
             self.loss_G_A_Classification0 = self.criterionGAN(self.netD_A_Classification0.forward(self.fake_B), True)*lambda_GA_classification
@@ -412,7 +410,7 @@ class CycleGANModel(BaseModel):
         else:
             print("error occur when generate loss cycleB")
         # combined loss
-        self.loss_G = self.loss_cycle_A + self.loss_cycle_B + self.loss_G_A_Classification1 + self.loss_G_B_Classification1 + self.loss_G_A_Classification0 + self.loss_G_B_Classification0 + self.loss_G_A_Classification2 + self.loss_G_B_Classification2 + self.loss_G_A_Classification3 + self.loss_G_B_Classification3 + self.loss_D_Regression
+        self.loss_G = self.loss_cycle_A + self.loss_cycle_B + self.loss_G_A_Classification1 + self.loss_G_B_Classification1 + self.loss_G_A_Classification0 + self.loss_G_B_Classification0 + self.loss_G_A_Classification2 + self.loss_G_B_Classification2 + self.loss_G_A_Classification3 + self.loss_G_B_Classification3
         self.loss_G.backward()
 
     def optimize_parameters(self):
@@ -420,10 +418,8 @@ class CycleGANModel(BaseModel):
         self.forward()
         self.optimizer_DeConv.zero_grad()
         # G_A and G_B
-        self.optimizer_D_Regression.zero_grad()
-        self.backward_D_Regression(1)
-        gnorm_D_Regression = torch.nn.utils.clip_grad_norm(self.netD_Regression.parameters(), self.opt.max_gnorm)
-        self.optimizer_D_Regression.step()
+
+
 
         self.optimizer_G.zero_grad()
         self.backward_G()
