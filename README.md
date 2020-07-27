@@ -12,3 +12,5 @@ python train.py --dataroot ./datasets/datasetname --name projectname --model cyc
 
 Testing:
 python test.py --dataroot ./datasets/datasetname --name projectname --model test --dataset_mode single --phase test --gpu_id 0 --checkpoints_dir ./checkpoints/ --loadSize 256 --which_epoch 70 --how_many 750 --label_intensity_styletransfer 0 1 0 0
+
+If you need the "single target domain" code as your baseline, please send the e-mail to gongr@vision.ee.ethz.ch
